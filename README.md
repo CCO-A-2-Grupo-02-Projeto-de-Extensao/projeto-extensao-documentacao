@@ -1,7 +1,7 @@
 # 📄 Documentação
 
 Repositório dedicado à documentação técnica e organizacional do projeto  
-Grupo 02 – SPTech 2026
+Grupo 02 – CCOA 2 SPTech 2026
 
 ---
 
