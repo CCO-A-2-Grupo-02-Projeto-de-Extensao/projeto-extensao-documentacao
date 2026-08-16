@@ -1,0 +1,5 @@
+RDS_INSTANCE_ID="rds-arandu-db"
+RDS_DB_NAME="bdClubeDesbravadores"
+RDS_USERNAME="admin"
+RDS_PASSWORD="arandu2026"
+RDS_CLASS="db.t3.micro"
