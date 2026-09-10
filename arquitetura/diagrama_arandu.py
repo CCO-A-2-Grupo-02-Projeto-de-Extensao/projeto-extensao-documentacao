@@ -48,7 +48,12 @@ with Diagram("Arquitetura Arandu", show=False,
 
     with Cluster("AWS Cloud", graph_attr={"bgcolor": "#f0f0f0", "style": "solid", "color": "black"}):
 
-        S3_bucket = S3("AWS S3")
+        S3_bucket = S3("S3 Documentos")
+
+        with Cluster("Arquitetura Medalhão", graph_attr={"bgcolor": "#fff8e1", "style": "solid", "color": "#B8860B"}):
+            s3_bronze = S3("S3 Bronze")
+            s3_silver = S3("S3 Silver")
+            s3_gold = S3("S3 Gold")
 
         with Cluster("VPC 10.0.0.0/16", graph_attr={"bgcolor": "#e7ffe65a", "style": "bold", "color": "green"}):
             internet_gateway = InternetGateway("Internet Gateway")
@@ -102,6 +107,8 @@ with Diagram("Arquitetura Arandu", show=False,
     java_backend >> rds
     java_backend >> Edge(**STORAGE) >> S3_bucket
     rds          >> Edge(**STORAGE) >> S3_bucket
+    s3_bronze >> Edge(**STORAGE) >> s3_silver >> Edge(**STORAGE) >> s3_gold
+    java_backend >> Edge(**STORAGE) >> [s3_bronze, s3_silver, s3_gold]
 
     # ---- Storage compartilhado (EFS) ----
     nginx_1a >> Edge(**STORAGE) >> efs
