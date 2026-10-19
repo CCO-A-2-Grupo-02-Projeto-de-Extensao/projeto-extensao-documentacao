@@ -14,6 +14,7 @@ O tratamento segue **bronze → silver → gold**:
 - `fatores-presenca.ipynb` — o notebook, já executado (abre com as saídas prontas).
 - `gold/fatores_presenca_dia.csv.gz` — 1.461 dias × 8 colunas.
 - `gold/cobertura_fontes.csv` — a janela real de cada fonte.
+- `DICIONARIO.md` — dicionário de dados de todas as camadas, incluindo o que as Lambdas geram na AWS.
 
 ## A tabela gold
 
