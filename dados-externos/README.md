@@ -14,6 +14,7 @@ O tratamento segue **bronze → silver → gold**:
 - `fatores-presenca.ipynb` — o notebook, já executado (abre com as saídas prontas).
 - `gold/fatores_presenca_dia.csv.gz` — 1.461 dias × 8 colunas.
 - `gold/cobertura_fontes.csv` — a janela real de cada fonte.
+- `DICIONARIO.md` — dicionário de dados de todas as camadas, incluindo o que as Lambdas geram na AWS.
 
 ## A tabela gold
 
@@ -35,6 +36,19 @@ jupyter lab fatores-presenca.ipynb
 ```
 
 A camada bronze baixa ~403 MB e pula o que já estiver em `bronze/`.
+
+### Execucao automatizada na AWS
+
+O deployment das camadas Bronze e Silver fica em `projeto-extensao-infraestrutura/Infra - Terraform`.
+As Lambdas preservam os arquivos originais por fonte no bucket Bronze, atualizam `manifesto.csv`
+e escrevem as mesmas tabelas Silver deste notebook como `.csv.gz`. O Terraform agenda INMET
+mensalmente, MusicBrainz semanalmente e ANBIMA mensalmente; novos objetos nos prefixes Bronze
+disparam a transformação Silver. A camada Gold continua sendo gerada separadamente pelo notebook.
+
+As regras da Silver automatizada incluem conversão do horário INMET para `America/Sao_Paulo`,
+conversão de `-9999` para nulo, filtro A701, expansão de eventos multi-dia, remoção de cancelados
+e de eventos sem data inicial completa, filtro de São Paulo e descarte das linhas de rodapé da
+planilha ANBIMA.
 
 ## Fontes
 
