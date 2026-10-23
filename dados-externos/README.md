@@ -1,7 +1,7 @@
 # Base externa: fatores da cidade e a presença no clube
 
-Cruza o percentual de presença das chamadas do Arandu Digital com **três fatores externos do dia** —
-clima, eventos na cidade e feriados. Recorte: **cidade de São Paulo**, 2023–2026.
+Puxa as chamadas do Arandu Digital do banco do sistema e cruza o percentual de presença com **três
+fatores externos do dia** — clima, eventos na cidade e feriados. Recorte: **cidade de São Paulo**, 2023–2026.
 
 O tratamento segue **bronze → silver → gold**:
 
@@ -12,7 +12,7 @@ O tratamento segue **bronze → silver → gold**:
 | 🥇 `gold/` | a tabela de análise: uma linha por dia | sim (20 KB) |
 
 - `fatores-presenca.ipynb` — o notebook, já executado (abre com as saídas prontas).
-- `gold/fatores_presenca_dia.csv.gz` — 1.461 dias × 8 colunas.
+- `gold/fatores_presenca_dia.csv.gz` — 1.461 dias × 10 colunas.
 - `gold/cobertura_fontes.csv` — a janela real de cada fonte.
 - `DICIONARIO.md` — dicionário de dados de todas as camadas, incluindo o que as Lambdas geram na AWS.
 
@@ -26,23 +26,30 @@ O tratamento segue **bronze → silver → gold**:
 | `feriado`, `nome_feriado` | feriado nacional |
 | `feriado_prolongado` | **derivada** — dia dentro de um bloco de 3+ dias seguidos sem expediente |
 | `fim_de_semana` | sábado ou domingo |
+| `registros_chamada` | registros de presença nas chamadas do dia (0 sem chamada) |
+| `percentual_presenca` | presentes ÷ registros, em %; vazio nos dias sem chamada |
 
 ## Rodar
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
-pip install pandas jupyter xlrd
+pip install pandas jupyter xlrd pymysql
 jupyter lab fatores-presenca.ipynb
 ```
 
-A camada bronze baixa ~403 MB e pula o que já estiver em `bronze/`.
+A camada bronze baixa ~403 MB e pula o que já estiver em `bronze/`. As chamadas são exportadas de
+novo a cada execução, do MySQL local do backend (`clube_tamoios`, mesmo usuário e senha de
+desenvolvimento do `application.properties`). Para outro banco, defina `ARANDU_DB_HOST`,
+`ARANDU_DB_USER`, `ARANDU_DB_PASSWORD` e `ARANDU_DB_NAME`. O RDS fica em subnet privada e não é
+alcançável de fora da VPC; na AWS quem lê o RDS é a Lambda.
 
 ### Execucao automatizada na AWS
 
 O deployment das camadas Bronze e Silver fica em `projeto-extensao-infraestrutura/Infra - Terraform`.
 As Lambdas preservam os arquivos originais por fonte no bucket Bronze, atualizam `manifesto.csv`
 e escrevem as mesmas tabelas Silver deste notebook como `.csv.gz`. O Terraform agenda INMET
-mensalmente, MusicBrainz semanalmente e ANBIMA mensalmente; novos objetos nos prefixes Bronze
+mensalmente, MusicBrainz semanalmente, ANBIMA mensalmente e as chamadas todo domingo — a Lambda
+`arandu-fatores-chamadas` roda dentro da VPC e lê o RDS direto; novos objetos nos prefixes Bronze
 disparam a transformação Silver. A camada Gold continua sendo gerada separadamente pelo notebook.
 
 As regras da Silver automatizada incluem conversão do horário INMET para `America/Sao_Paulo`,
@@ -57,8 +64,10 @@ planilha ANBIMA.
 | Clima (horário, por estação) | INMET — `portal.inmet.gov.br/uploads/dadoshistoricos/{ANO}.zip` | mensal |
 | Eventos na cidade | MusicBrainz — `data.metabrainz.org/pub/musicbrainz/data/json-dumps/LATEST/event.tar.xz` | 2×/semana |
 | Feriados nacionais | ANBIMA — `anbima.com.br/feriados/arqs/feriados_nacionais.xls` | estático, cobre 2001–2099 |
+| Presença | Arandu Digital — tabelas `presenca` e `chamada` do MySQL | semanal |
 
-Todas são arquivo para download, não API.
+Os fatores externos são arquivo para download, não API. Das chamadas saem só `id_chamada`,
+`data_chamada` e `presenca`, nenhum dado pessoal do desbravador.
 
 ## Por que só três fatores
 

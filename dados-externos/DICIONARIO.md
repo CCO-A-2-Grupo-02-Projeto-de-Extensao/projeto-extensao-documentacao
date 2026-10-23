@@ -1,7 +1,7 @@
 # Dicionário de dados — fatores externos
 
 Dicionário das camadas **bronze → silver → gold** da base de fatores externos (clima, eventos na
-cidade e feriados). Bronze e Silver são geradas pelas Lambdas de
+cidade e feriados) e das chamadas do Arandu Digital, que dão a presença do clube. Bronze e Silver são geradas pelas Lambdas de
 `projeto-extensao-infraestrutura/Infra - Terraform` (`lambda.tf`, `lambda_src/`); a Gold é gerada
 pelo notebook `fatores-presenca.ipynb`.
 
@@ -15,13 +15,15 @@ Faixas de valores, nulos e contagens vêm dos arquivos versionados em `silver/` 
 | 🥉 Bronze | Clima INMET | `s3://<bronze>/clima/inmet_{ano}_{versao}.zip` | um arquivo por ano | Lambda `arandu-fatores-inmet` |
 | 🥉 Bronze | Eventos MusicBrainz | `s3://<bronze>/eventos/{versao_dump}/event.tar.xz` | um arquivo por dump | Lambda `arandu-fatores-musicbrainz` |
 | 🥉 Bronze | Feriados ANBIMA | `s3://<bronze>/feriados/feriados_nacionais_{versao}.xls` | um arquivo por versão | Lambda `arandu-fatores-anbima` |
-| 🥉 Bronze | Manifesto | `s3://<bronze>/manifesto.csv` | uma linha por arquivo ingerido | as três Lambdas de ingestão |
+| 🥉 Bronze | Chamadas Arandu Digital | `s3://<bronze>/chamadas/presencas_{versao}.csv` | um arquivo por versão | Lambda `arandu-fatores-chamadas` |
+| 🥉 Bronze | Manifesto | `s3://<bronze>/manifesto.csv` | uma linha por arquivo ingerido | as quatro Lambdas de ingestão |
 | 🥈 Silver | `clima_horario` | `s3://<silver>/clima_horario.csv.gz` | uma hora | Lambda `arandu-fatores-silver` |
 | 🥈 Silver | `eventos_cidade` | `s3://<silver>/eventos_cidade.csv.gz` | um evento × um dia | Lambda `arandu-fatores-silver` |
 | 🥈 Silver | `feriados_nacionais` | `s3://<silver>/feriados_nacionais.csv.gz` | um dia de feriado | Lambda `arandu-fatores-silver` |
+| 🥈 Silver | `presenca_chamadas` | `s3://<silver>/presenca_chamadas.csv.gz` | uma chamada | Lambda `arandu-fatores-silver` |
 | 🥇 Gold | `fatores_presenca_dia` | `gold/fatores_presenca_dia.csv.gz` | um dia | notebook |
 | 🥇 Gold | `cobertura_fontes` | `gold/cobertura_fontes.csv` | uma fonte | notebook |
-| ⚙️ Controle | Lock do manifesto | DynamoDB `arandu-fatores-manifest-lock-{conta}` | um lock ativo | as três Lambdas de ingestão |
+| ⚙️ Controle | Lock do manifesto | DynamoDB `arandu-fatores-manifest-lock-{conta}` | um lock ativo | as quatro Lambdas de ingestão |
 
 Nomes dos buckets (`s3.tf`): `<bronze>` = `arandu-bronze-{s3_member_tag}-{conta}` e
 `<silver>` = `arandu-silver-{s3_member_tag}-{conta}`, sobrescrevíveis por `bucket_bronze_name` e
@@ -34,12 +36,14 @@ Nomes dos buckets (`s3.tf`): `<bronze>` = `arandu-bronze-{s3_member_tag}-{conta}
 | `arandu-fatores-inmet` | EventBridge `cron(0 6 1 * ? *)` — dia 1 de cada mês, 06:00 UTC | baixa um zip por ano, de `INMET_START_YEAR` (2023) até o ano corrente |
 | `arandu-fatores-musicbrainz` | EventBridge `cron(0 7 ? * MON *)` — segundas, 07:00 UTC | lê `LATEST` e baixa o `event.tar.xz` daquele dump |
 | `arandu-fatores-anbima` | EventBridge `cron(0 8 1 * ? *)` — dia 1 de cada mês, 08:00 UTC | baixa a planilha de feriados |
-| `arandu-fatores-silver` | `s3:ObjectCreated:*` nos prefixos `clima/`, `eventos/`, `feriados/` | reprocessa a fonte inteira e sobrescreve a tabela Silver dela |
+| `arandu-fatores-chamadas` | EventBridge `cron(0 9 ? * SUN *)` — domingos, 09:00 UTC | consulta `presenca` × `chamada` no RDS e grava o CSV |
+| `arandu-fatores-silver` | `s3:ObjectCreated:*` nos prefixos `clima/`, `eventos/`, `feriados/`, `chamadas/` | reprocessa a fonte inteira e sobrescreve a tabela Silver dela |
 
 A ingestão é idempotente: se o objeto já existe na Bronze, não baixa de novo, só registra no
 manifesto (que ignora `arquivo_s3` repetido). O sufixo `{versao}` são os 16 primeiros caracteres
 do SHA-256 do `ETag` (ou do `Last-Modified`) devolvido pelo servidor, então um arquivo republicado
-pela fonte gera um objeto novo, e o anterior fica preservado.
+pela fonte gera um objeto novo, e o anterior fica preservado. Nas chamadas, que vêm do banco e não
+de um servidor HTTP, o `{versao}` é o SHA-256 do próprio CSV: semana sem chamada nova não gera objeto.
 
 ---
 
@@ -104,16 +108,31 @@ As colunas de precipitação e temperatura são localizadas por trecho do nome (
 As quatro linhas de nota no rodapé da planilha ficam na coluna `Data` e são descartadas por não
 converterem para data.
 
+### `chamadas/presencas_{versao}.csv`
+
+| Item | Valor |
+|---|---|
+| Fonte | MySQL do Arandu Digital (RDS `bdClubeDesbravadores`), tabelas `presenca` e `chamada` |
+| Acesso | Lambda dentro da VPC, subnet privada do backend, SG `arandu-sg-lambda-banco`; lido com `pymysql` |
+| Formato | CSV UTF-8, separador `,`, com cabeçalho; uma linha por registro de presença |
+| Dados pessoais | nenhum: não sai id, nome nem qualquer outro campo do desbravador |
+
+| Coluna | Tipo | Origem no banco | Vai para |
+|---|---|---|---|
+| `id_chamada` | inteiro | `chamada.idChamada` | `presenca_chamadas.id_chamada` |
+| `data_chamada` | data `AAAA-MM-DD` | `chamada.data_chamada` | `presenca_chamadas.dia` |
+| `presenca` | `0` ou `1` | `presenca.presenca`; nulo vira `0` | `presenca_chamadas.registros` e `presentes` |
+
 ### `manifesto.csv`
 
 Registro de toda ingestão na Bronze. CSV UTF-8, separador `,`, na raiz do bucket.
 
 | Coluna | Tipo | Nulo | Descrição | Exemplo |
 |---|---|---|---|---|
-| `fonte` | texto | não | origem do arquivo: `INMET`, `MusicBrainz` ou `ANBIMA` | `INMET` |
+| `fonte` | texto | não | origem do arquivo: `INMET`, `MusicBrainz`, `ANBIMA` ou `Arandu Digital` | `INMET` |
 | `data_coleta` | timestamp ISO 8601 com fuso UTC | não | momento em que a Lambda registrou o arquivo | `2026-10-01T06:00:12.345678+00:00` |
 | `tamanho_bytes` | inteiro | não | tamanho do objeto no S3, em bytes | `49483012` |
-| `url` | texto | não | URL de onde o arquivo foi baixado | `https://portal.inmet.gov.br/uploads/dadoshistoricos/2024.zip` |
+| `url` | texto | não | URL de onde o arquivo foi baixado; nas chamadas, `mysql://{host}/{banco}`, sem credencial | `https://portal.inmet.gov.br/uploads/dadoshistoricos/2024.zip` |
 | `arquivo_s3` | texto | não | chave do objeto no bucket Bronze; **chave única** do manifesto | `clima/inmet_2024_3f9a1c0b7d2e4a51.zip` |
 
 ---
@@ -167,11 +186,25 @@ Uma linha por dia de feriado nacional. 1.263 linhas, de 2001-01-01 a 2099-12-25.
 
 Ordenada por `dia`. Só feriados **nacionais** — municipais (ex.: 25 de janeiro) não constam.
 
+### `presenca_chamadas.csv.gz`
+
+Uma linha por chamada registrada no sistema.
+
+| Coluna | Tipo | Nulo | Descrição | Regra de transformação | Exemplo |
+|---|---|---|---|---|---|
+| `id_chamada` | inteiro | não | chamada no Arandu Digital; **chave** | `id_chamada` da Bronze | `1` |
+| `dia` | data `AAAA-MM-DD` | não | data da chamada | `data_chamada`; linhas com data inválida saem | `2026-05-20` |
+| `registros` | inteiro | não | quantos desbravadores constam na chamada | contagem de linhas da chamada | `5` |
+| `presentes` | inteiro | não | quantos estavam presentes | soma de `presenca` | `4` |
+
+Ordenada por `dia` e `id_chamada`. Quando há mais de uma exportação na Bronze, só a mais recente
+(`LastModified`) é usada — cada uma é uma foto completa do banco.
+
 ---
 
 ## 🥇 Gold
 
-Gerada pelo notebook `fatores-presenca.ipynb` a partir das três tabelas Silver. Não é produzida
+Gerada pelo notebook `fatores-presenca.ipynb` a partir das quatro tabelas Silver. Não é produzida
 pelas Lambdas.
 
 ### `fatores_presenca_dia.csv.gz`
@@ -189,6 +222,8 @@ Booleanos são gravados como `True`/`False`.
 | `nome_feriado` | texto | — | sim (96,5%) | nome do feriado nacional | `feriados_nacionais.nome_feriado` do dia; nulo se não é feriado | `Confraternização Universal` |
 | `feriado` | booleano | — | não | o dia é feriado nacional | `nome_feriado` não nulo | `True` |
 | `fim_de_semana` | booleano | — | não | o dia é sábado ou domingo | dia da semana ≥ sábado | `True` |
+| `registros_chamada` | inteiro | registros | não | registros de presença das chamadas do dia | soma de `presenca_chamadas.registros` do dia; 0 quando não houve chamada | `5` |
+| `percentual_presenca` | decimal (1 casa) | % | sim | presença do clube no dia | `presentes / registros × 100` somando as chamadas do dia; nulo quando não houve chamada | `80.0` |
 | `feriado_prolongado` | booleano | — | não | o dia faz parte de um bloco sem expediente | `feriado` ou `fim_de_semana`, dentro de uma sequência de **3 ou mais** dias seguidos nessa condição | `False` |
 
 Os 153 dias sem `chuva_mm` são exatamente 2026-08-01 a 2026-12-31, ainda não publicados pelo INMET
@@ -202,10 +237,10 @@ compressão.
 
 | Coluna | Tipo | Nulo | Descrição | Regra de cálculo | Exemplo |
 |---|---|---|---|---|---|
-| `fonte` | texto | não | `clima`, `eventos` ou `feriados`; **chave** | — | `clima` |
+| `fonte` | texto | não | `clima`, `eventos`, `feriados` ou `chamadas`; **chave** | — | `clima` |
 | `primeiro_dia` | data `AAAA-MM-DD` | não | primeiro dia com dado | menor `data` em que a fonte tem dado | `2023-01-01` |
 | `ultimo_dia` | data `AAAA-MM-DD` | não | último dia com dado | maior `data` em que a fonte tem dado | `2026-07-31` |
-| `dias_com_dado` | inteiro | não | quantidade de dias com dado | clima: `temp_media_c` não nulo; eventos: `eventos_sp > 0`; feriados: `feriado` verdadeiro | `1307` |
+| `dias_com_dado` | inteiro | não | quantidade de dias com dado | clima: `temp_media_c` não nulo; eventos: `eventos_sp > 0`; feriados: `feriado` verdadeiro; chamadas: `percentual_presenca` não nulo | `1307` |
 | `cobertura_pct` | decimal (1 casa) | não | percentual dos 1.461 dias com dado | `dias_com_dado / 1461 × 100` | `89.5` |
 
 ---
@@ -231,8 +266,9 @@ Quem não consegue o lock tenta de novo a cada 0,25 s, até 120 vezes, e então 
 | Ponto | Notebook | Lambda |
 |---|---|---|
 | Colunas do `manifesto.csv` | `arquivo`, `mb`, `origem` | `fonte`, `data_coleta`, `tamanho_bytes`, `url`, `arquivo_s3` |
-| Nome dos arquivos Bronze | `inmet_2024.zip`, `event.tar.xz`, `feriados_nacionais.xls` | com prefixo de fonte e sufixo de versão (ver acima) |
+| Nome dos arquivos Bronze | `inmet_2024.zip`, `event.tar.xz`, `feriados_nacionais.xls`, `chamadas.csv` | com prefixo de fonte e sufixo de versão (ver acima) |
 | Histórico na Bronze | sobrescreve; um arquivo por fonte/ano | preserva cada versão publicada |
+| Banco das chamadas | MySQL local (`clube_tamoios`) ou o apontado por `ARANDU_DB_*` | RDS `bdClubeDesbravadores` |
 | Gold | gera | não gera; o bucket Gold existe vazio |
 
 O `manifesto.csv` versionado em `bronze/` segue o formato do notebook. Na AWS vale o formato da
