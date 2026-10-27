@@ -16,14 +16,14 @@ Faixas de valores, nulos e contagens vêm dos arquivos versionados em `silver/` 
 | 🥉 Bronze | Eventos MusicBrainz | `s3://<bronze>/eventos/{versao_dump}/event.tar.xz` | um arquivo por dump | Lambda `arandu-fatores-musicbrainz` |
 | 🥉 Bronze | Feriados ANBIMA | `s3://<bronze>/feriados/feriados_nacionais_{versao}.xls` | um arquivo por versão | Lambda `arandu-fatores-anbima` |
 | 🥉 Bronze | Chamadas Arandu Digital | `s3://<bronze>/chamadas/presencas_{versao}.csv` | um arquivo por versão | Lambda `arandu-fatores-chamadas` |
-| 🥉 Bronze | Manifesto | `s3://<bronze>/manifesto.csv` | uma linha por arquivo ingerido | as quatro Lambdas de ingestão |
+| 🥉 Bronze | Alterações | `s3://<bronze>/alteracoes.csv` | uma linha por arquivo ingerido | as quatro Lambdas de ingestão |
 | 🥈 Silver | `clima_horario` | `s3://<silver>/clima_horario.csv.gz` | uma hora | Lambda `arandu-fatores-silver` |
 | 🥈 Silver | `eventos_cidade` | `s3://<silver>/eventos_cidade.csv.gz` | um evento × um dia | Lambda `arandu-fatores-silver` |
 | 🥈 Silver | `feriados_nacionais` | `s3://<silver>/feriados_nacionais.csv.gz` | um dia de feriado | Lambda `arandu-fatores-silver` |
 | 🥈 Silver | `presenca_chamadas` | `s3://<silver>/presenca_chamadas.csv.gz` | uma chamada | Lambda `arandu-fatores-silver` |
 | 🥇 Gold | `fatores_presenca_dia` | `gold/fatores_presenca_dia.csv.gz` | um dia | notebook |
 | 🥇 Gold | `cobertura_fontes` | `gold/cobertura_fontes.csv` | uma fonte | notebook |
-| ⚙️ Controle | Lock do manifesto | DynamoDB `arandu-fatores-manifest-lock-{conta}` | um lock ativo | as quatro Lambdas de ingestão |
+| ⚙️ Controle | Lock das alterações | DynamoDB `arandu-fatores-manifest-lock-{conta}` | um lock ativo | as quatro Lambdas de ingestão |
 
 Nomes dos buckets (`s3.tf`): `<bronze>` = `arandu-bronze-{s3_member_tag}-{conta}` e
 `<silver>` = `arandu-silver-{s3_member_tag}-{conta}`, sobrescrevíveis por `bucket_bronze_name` e
@@ -39,8 +39,8 @@ Nomes dos buckets (`s3.tf`): `<bronze>` = `arandu-bronze-{s3_member_tag}-{conta}
 | `arandu-fatores-chamadas` | EventBridge `cron(0 9 ? * SUN *)` — domingos, 09:00 UTC | consulta `presenca` × `chamada` no RDS e grava o CSV |
 | `arandu-fatores-silver` | `s3:ObjectCreated:*` nos prefixos `clima/`, `eventos/`, `feriados/`, `chamadas/` | reprocessa a fonte inteira e sobrescreve a tabela Silver dela |
 
-A ingestão é idempotente: se o objeto já existe na Bronze, não baixa de novo, só registra no
-manifesto (que ignora `arquivo_s3` repetido). O sufixo `{versao}` são os 16 primeiros caracteres
+A ingestão é idempotente: se o objeto já existe na Bronze, não baixa de novo, só registra em
+`alteracoes.csv` (que ignora `arquivo_s3` repetido). O sufixo `{versao}` são os 16 primeiros caracteres
 do SHA-256 do `ETag` (ou do `Last-Modified`) devolvido pelo servidor, então um arquivo republicado
 pela fonte gera um objeto novo, e o anterior fica preservado. Nas chamadas, que vêm do banco e não
 de um servidor HTTP, o `{versao}` é o SHA-256 do próprio CSV: semana sem chamada nova não gera objeto.
@@ -123,7 +123,7 @@ converterem para data.
 | `data_chamada` | data `AAAA-MM-DD` | `chamada.data_chamada` | `presenca_chamadas.dia` |
 | `presenca` | `0` ou `1` | `presenca.presenca`; nulo vira `0` | `presenca_chamadas.registros` e `presentes` |
 
-### `manifesto.csv`
+### `alteracoes.csv`
 
 Registro de toda ingestão na Bronze. CSV UTF-8, separador `,`, na raiz do bucket.
 
@@ -133,7 +133,7 @@ Registro de toda ingestão na Bronze. CSV UTF-8, separador `,`, na raiz do bucke
 | `data_coleta` | timestamp ISO 8601 com fuso UTC | não | momento em que a Lambda registrou o arquivo | `2026-10-01T06:00:12.345678+00:00` |
 | `tamanho_bytes` | inteiro | não | tamanho do objeto no S3, em bytes | `49483012` |
 | `url` | texto | não | URL de onde o arquivo foi baixado; nas chamadas, `mysql://{host}/{banco}`, sem credencial | `https://portal.inmet.gov.br/uploads/dadoshistoricos/2024.zip` |
-| `arquivo_s3` | texto | não | chave do objeto no bucket Bronze; **chave única** do manifesto | `clima/inmet_2024_3f9a1c0b7d2e4a51.zip` |
+| `arquivo_s3` | texto | não | chave do objeto no bucket Bronze; **chave única** do arquivo | `clima/inmet_2024_3f9a1c0b7d2e4a51.zip` |
 
 ---
 
@@ -245,14 +245,14 @@ compressão.
 
 ---
 
-## ⚙️ Controle — lock do manifesto (DynamoDB)
+## ⚙️ Controle — lock das alterações (DynamoDB)
 
 Tabela `arandu-fatores-manifest-lock-{conta}`, cobrança sob demanda. Garante que duas Lambdas de
-ingestão não reescrevam o `manifesto.csv` ao mesmo tempo. Fica vazia fora das execuções.
+ingestão não reescrevam o `alteracoes.csv` ao mesmo tempo. Fica vazia fora das execuções.
 
 | Atributo | Tipo DynamoDB | Papel | Descrição | Exemplo |
 |---|---|---|---|---|
-| `lock_id` | `S` | chave de partição | nome do recurso travado; hoje sempre `manifesto.csv` | `manifesto.csv` |
+| `lock_id` | `S` | chave de partição | nome do recurso travado; hoje sempre `alteracoes.csv` | `alteracoes.csv` |
 | `owner` | `S` | — | UUID da execução que detém o lock; só ela pode removê-lo | `8b1e6c2a-…` |
 | `expires_at` | `N` | TTL | epoch em segundos; o lock vale por 120 s e, vencido, pode ser tomado por outra execução | `1791262812` |
 
@@ -265,11 +265,11 @@ Quem não consegue o lock tenta de novo a cada 0,25 s, até 120 vezes, e então 
 
 | Ponto | Notebook | Lambda |
 |---|---|---|
-| Colunas do `manifesto.csv` | `arquivo`, `mb`, `origem` | `fonte`, `data_coleta`, `tamanho_bytes`, `url`, `arquivo_s3` |
+| Colunas do `alteracoes.csv` | `arquivo`, `mb`, `origem` | `fonte`, `data_coleta`, `tamanho_bytes`, `url`, `arquivo_s3` |
 | Nome dos arquivos Bronze | `inmet_2024.zip`, `event.tar.xz`, `feriados_nacionais.xls`, `chamadas.csv` | com prefixo de fonte e sufixo de versão (ver acima) |
 | Histórico na Bronze | sobrescreve; um arquivo por fonte/ano | preserva cada versão publicada |
 | Banco das chamadas | MySQL local (`clube_tamoios`) ou o apontado por `ARANDU_DB_*` | RDS `bdClubeDesbravadores` |
 | Gold | gera | não gera; o bucket Gold existe vazio |
 
-O `manifesto.csv` versionado em `bronze/` segue o formato do notebook. Na AWS vale o formato da
+O `alteracoes.csv` versionado em `bronze/` segue o formato do notebook. Na AWS vale o formato da
 Lambda.

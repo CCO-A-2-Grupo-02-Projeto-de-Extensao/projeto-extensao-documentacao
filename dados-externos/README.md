@@ -7,7 +7,7 @@ O tratamento segue **bronze → silver → gold**:
 
 | Camada | O que é | Vai para o Git? |
 |---|---|---|
-| 🥉 `bronze/` | o arquivo como a fonte publicou, sem uma linha alterada, + `manifesto.csv` | não (403 MB) |
+| 🥉 `bronze/` | o arquivo como a fonte publicou, sem uma linha alterada, + `alteracoes.csv` | não (403 MB) |
 | 🥈 `silver/` | uma tabela por fonte, limpa e tipada, no grão natural dela | sim (148 KB) |
 | 🥇 `gold/` | a tabela de análise: uma linha por dia | sim (20 KB) |
 
@@ -46,7 +46,7 @@ alcançável de fora da VPC; na AWS quem lê o RDS é a Lambda.
 ### Execucao automatizada na AWS
 
 O deployment das camadas Bronze e Silver fica em `projeto-extensao-infraestrutura/Infra - Terraform`.
-As Lambdas preservam os arquivos originais por fonte no bucket Bronze, atualizam `manifesto.csv`
+As Lambdas preservam os arquivos originais por fonte no bucket Bronze, atualizam `alteracoes.csv`
 e escrevem as mesmas tabelas Silver deste notebook como `.csv.gz`. O Terraform agenda INMET
 mensalmente, MusicBrainz semanalmente, ANBIMA mensalmente e as chamadas todo domingo — a Lambda
 `arandu-fatores-chamadas` roda dentro da VPC e lê o RDS direto; novos objetos nos prefixes Bronze
