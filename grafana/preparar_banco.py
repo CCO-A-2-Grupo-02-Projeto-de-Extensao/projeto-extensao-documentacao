@@ -34,7 +34,7 @@ def arquivos_s3():
                         "arquivo": objeto["Key"],
                         "bytes": objeto["Size"],
                         "linhas": None,
-                        "modificado_em": objeto["LastModified"].strftime(FORMATO),
+                        "modificado_em": objeto["LastModified"].astimezone().strftime(FORMATO),
                     })
         except (BotoCoreError, ClientError) as erro:
             print(f"aviso: não deu para listar {bucket}: {erro}", flush=True)
