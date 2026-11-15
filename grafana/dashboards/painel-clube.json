@@ -1,0 +1,1384 @@
+{
+  "uid": "arandu-cliente",
+  "title": "Arandu — Painel do Clube",
+  "description": "Painel completo do cliente: a diretoria do Clube Tamoios acompanhando presença, progressão, documentação e fatores externos.",
+  "tags": [
+    "arandu"
+  ],
+  "timezone": "America/Sao_Paulo",
+  "editable": true,
+  "schemaVersion": 41,
+  "time": {
+    "from": "2026-01-01T00:00:00.000Z",
+    "to": "now"
+  },
+  "refresh": "",
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Visão geral do clube",
+      "id": 1,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Desbravadores ativos",
+      "id": 2,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Instrutores ativos",
+      "id": 3,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 4,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) FROM Pessoa p JOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Instrutor' WHERE p.ativo = 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Frequência no período",
+      "id": 4,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Presentes ÷ registros de chamada no período escolhido.",
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT 100 * AVG(pr.presenca) FROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e11d48",
+                "value": null
+              },
+              {
+                "color": "#d97706",
+                "value": 70
+              },
+              {
+                "color": "#10b981",
+                "value": 85
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Chamadas no período",
+      "id": 5,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT c.idChamada) FROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "LGPD pendente",
+      "id": 6,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Desbravadores ativos sem consentimento do responsável registrado.",
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1 AND p.consentimento_em IS NULL"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#10b981",
+                "value": null
+              },
+              {
+                "color": "#d97706",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Documentos faltando",
+      "id": 7,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Dos 6 documentos obrigatórios por desbravador ativo, quantos ainda não foram enviados.",
+      "gridPos": {
+        "x": 20,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT 6 * COUNT(*) - (SELECT COUNT(DISTINCT d.Pessoa_idPessoa, d.tipo) FROM Documento d\nJOIN Pessoa p ON p.idPessoa = d.Pessoa_idPessoa JOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1 AND d.tipo IN ('certidaoNascimento','cartaoSus','carteiraVacinacao','carteiraConvenio','comprovanteEndereco','autorizacaoClube'))\nFROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#10b981",
+                "value": null
+              },
+              {
+                "color": "#d97706",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Presença",
+      "id": 8,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Frequência por reunião × chuva do dia",
+      "id": 9,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Chuva vem da estação A701 do INMET (base externa). O INMET publica com cerca de um mês de atraso.",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 16,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT c.data_chamada AS time, 100 * AVG(pr.presenca) AS `Frequência`\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)\nGROUP BY c.data_chamada ORDER BY 1"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT f.dia AS time, f.chuva_mm AS `Chuva`\nFROM arandu_analise.fatores_dia f\nWHERE f.dia IN (SELECT c.data_chamada FROM chamada c WHERE $__timeFilter(c.data_chamada))\nORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "pointSize": 6,
+            "showPoints": "always",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Chuva"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "lengthmm"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": null
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3b82f6"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 40
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "Atenção: frequência abaixo de 75%",
+      "id": 10,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Quem mais faltou no período, para o conselheiro procurar a família.",
+      "gridPos": {
+        "x": 16,
+        "y": 6,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT p.nome AS Desbravador, COALESCE(u.nome, '—') AS Unidade,\n  SUM(pr.presenca) AS Presenças, COUNT(*) AS Chamadas, 100 * AVG(pr.presenca) AS Frequência\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada) AND p.ativo = 1\nGROUP BY p.idPessoa, p.nome, u.nome\nHAVING Frequência < 75\nORDER BY Frequência, p.nome"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Frequência"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#e11d48",
+                      "value": null
+                    },
+                    {
+                      "color": "#d97706",
+                      "value": 70
+                    },
+                    {
+                      "color": "#10b981",
+                      "value": 85
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "type": "barchart",
+      "title": "Frequência por unidade",
+      "id": 11,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COALESCE(u.nome, 'Sem unidade') AS Unidade, 100 * AVG(pr.presenca) AS Frequência\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)\nGROUP BY Unidade ORDER BY Frequência DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds",
+            "fixedColor": "#b33a4a"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e11d48",
+                "value": null
+              },
+              {
+                "color": "#d97706",
+                "value": 70
+              },
+              {
+                "color": "#10b981",
+                "value": 85
+              }
+            ]
+          },
+          "max": 100,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "barchart",
+      "title": "Frequência por classe",
+      "id": 12,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COALESCE(cl.nome, 'Sem classe') AS Classe, 100 * AVG(pr.presenca) AS Frequência\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)\nGROUP BY cl.idClasse, Classe ORDER BY cl.idClasse"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds",
+            "fixedColor": "#b33a4a"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e11d48",
+                "value": null
+              },
+              {
+                "color": "#d97706",
+                "value": 70
+              },
+              {
+                "color": "#10b981",
+                "value": 85
+              }
+            ]
+          },
+          "max": 100,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "row",
+      "title": "Fatores externos (clima, feriados e eventos na cidade)",
+      "id": 13,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "barchart",
+      "title": "Frequência por condição do dia",
+      "id": 14,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Cruza as chamadas do sistema com a base externa (INMET e ANBIMA).",
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT condicao AS Condição, 100 * AVG(presenca) AS Frequência FROM (\n  SELECT pr.presenca, CASE\n    WHEN f.feriado_prolongado THEN '1. Feriado prolongado'\n    WHEN f.chuva_mm IS NULL THEN '5. Sem dado de clima'\n    WHEN f.chuva_mm >= 10 THEN '2. Chuva forte (≥ 10 mm)'\n    WHEN f.chuva_mm >= 2 THEN '3. Chuva fraca (2–10 mm)'\n    ELSE '4. Sem chuva' END AS condicao\n  FROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nLEFT JOIN arandu_analise.fatores_dia f ON f.dia = c.data_chamada\n  WHERE $__timeFilter(c.data_chamada)\n) t GROUP BY condicao ORDER BY condicao"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds",
+            "fixedColor": "#b33a4a"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e11d48",
+                "value": null
+              },
+              {
+                "color": "#d97706",
+                "value": 70
+              },
+              {
+                "color": "#10b981",
+                "value": 85
+              }
+            ]
+          },
+          "max": 100,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Reuniões com chuva forte",
+      "id": 15,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT c.idChamada)\nFROM chamada c JOIN arandu_analise.fatores_dia f ON f.dia = c.data_chamada\nWHERE $__timeFilter(c.data_chamada) AND f.chuva_mm >= 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Reuniões em feriado prolongado",
+      "id": 16,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 16,
+        "y": 25,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT c.idChamada)\nFROM chamada c JOIN arandu_analise.fatores_dia f ON f.dia = c.data_chamada\nWHERE $__timeFilter(c.data_chamada) AND f.feriado_prolongado"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Megaeventos em SP no período",
+      "id": 17,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Shows, festivais e convenções catalogados no MusicBrainz. Zero significa que ninguém cadastrou.",
+      "gridPos": {
+        "x": 20,
+        "y": 25,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT SUM(f.eventos_sp) FROM arandu_analise.fatores_dia f\nWHERE $__timeFilter(f.dia)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Perda de frequência",
+      "id": 18,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Pontos percentuais a menos em relação a um sábado normal, sem chuva e sem feriado.",
+      "gridPos": {
+        "x": 12,
+        "y": 29,
+        "w": 12,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT\n  100 * AVG(CASE WHEN f.chuva_mm < 2 AND NOT f.feriado_prolongado THEN pr.presenca END)\n  - 100 * AVG(CASE WHEN f.chuva_mm >= 10 THEN pr.presenca END) AS `Com chuva forte`,\n  100 * AVG(CASE WHEN f.chuva_mm < 2 AND NOT f.feriado_prolongado THEN pr.presenca END)\n  - 100 * AVG(CASE WHEN f.feriado_prolongado THEN pr.presenca END) AS `Em feriado prolongado`\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nLEFT JOIN arandu_analise.fatores_dia f ON f.dia = c.data_chamada\nWHERE $__timeFilter(c.data_chamada)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#d97706"
+          },
+          "custom": {},
+          "displayName": "${__field.displayName}",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Progressão e especialidades",
+      "id": 19,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "barchart",
+      "title": "Desbravadores por classe",
+      "id": 20,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COALESCE(cl.nome, 'Sem classe') AS Classe, COUNT(*) AS Desbravadores\nFROM Pessoa p JOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nWHERE p.ativo = 1 GROUP BY cl.idClasse, Classe ORDER BY cl.idClasse"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "barchart",
+      "title": "Desbravadores por unidade",
+      "id": 21,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 8,
+        "y": 35,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COALESCE(u.nome, 'Sem unidade') AS Unidade, COUNT(*) AS Desbravadores\nFROM Pessoa p JOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nWHERE p.ativo = 1 GROUP BY Unidade ORDER BY Desbravadores DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "barchart",
+      "title": "Especialidades concluídas por categoria",
+      "id": 22,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Pelo ano de conclusão, dentro dos anos do período escolhido.",
+      "gridPos": {
+        "x": 16,
+        "y": 35,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT e.categoria AS Categoria, COUNT(*) AS Concluídas\nFROM Especialidade_concluida ec JOIN Especialidade e ON e.idEspecialidade = ec.Especialidade_idEspecialidade\nWHERE ec.ano BETWEEN YEAR(FROM_UNIXTIME($__unixEpochFrom())) AND YEAR(FROM_UNIXTIME($__unixEpochTo()))\nGROUP BY e.categoria ORDER BY Concluídas DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#d97706"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "row",
+      "title": "Documentação e agenda",
+      "id": 23,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 44,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "barchart",
+      "title": "Documentos obrigatórios entregues",
+      "id": 24,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Percentual dos desbravadores ativos que já têm cada documento digitalizado.",
+      "gridPos": {
+        "x": 0,
+        "y": 45,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT CASE t.tipo\n    WHEN 'certidaoNascimento' THEN 'Certidão de Nascimento' WHEN 'cartaoSus' THEN 'Cartão SUS'\n    WHEN 'carteiraVacinacao' THEN 'Carteira de Vacinação' WHEN 'carteiraConvenio' THEN 'Carteira do Convênio'\n    WHEN 'comprovanteEndereco' THEN 'Comprovante de Endereço' ELSE 'Autorização do Clube' END AS Documento,\n  100 * COUNT(DISTINCT d.Pessoa_idPessoa) / (SELECT COUNT(*) FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1) AS Entregues\nFROM (SELECT 'certidaoNascimento' AS tipo UNION ALL SELECT 'cartaoSus' UNION ALL SELECT 'carteiraVacinacao'\n      UNION ALL SELECT 'carteiraConvenio' UNION ALL SELECT 'comprovanteEndereco' UNION ALL SELECT 'autorizacaoClube') t\nLEFT JOIN (SELECT d.Pessoa_idPessoa, d.tipo FROM Documento d JOIN Pessoa p ON p.idPessoa = d.Pessoa_idPessoa\n           JOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador' WHERE p.ativo = 1) d ON d.tipo = t.tipo\nGROUP BY t.tipo ORDER BY Entregues DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds",
+            "fixedColor": "#b33a4a"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e11d48",
+                "value": null
+              },
+              {
+                "color": "#d97706",
+                "value": 70
+              },
+              {
+                "color": "#10b981",
+                "value": 85
+              }
+            ]
+          },
+          "max": 100,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "table",
+      "title": "Próximos eventos",
+      "id": 25,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 45,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT DATE_FORMAT(e.data_inicio, '%d/%m/%Y') AS Data, e.nome AS Evento, e.tipo AS Tipo\nFROM evento e\nWHERE e.data_inicio >= CURDATE()\nGROUP BY e.data_inicio, e.nome, e.tipo\nORDER BY e.data_inicio LIMIT 12"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Data"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Painéis do Arandu",
+      "type": "dashboards",
+      "tags": [
+        "arandu"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}

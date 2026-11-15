@@ -1,0 +1,954 @@
+{
+  "uid": "arandu-administrador",
+  "title": "Arandu — Painel do Administrador",
+  "description": "Painel completo do administrador: a equipe do Arandu acompanhando o pipeline de dados externos, o banco do sistema e a qualidade dos cadastros.",
+  "tags": [
+    "arandu"
+  ],
+  "timezone": "America/Sao_Paulo",
+  "editable": true,
+  "schemaVersion": 41,
+  "time": {
+    "from": "2023-01-01T00:00:00.000Z",
+    "to": "now"
+  },
+  "refresh": "",
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Pipeline de dados externos (bronze → silver → gold)",
+      "id": 1,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Dias sem clima novo",
+      "id": 2,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "O INMET publica com ~1 mês de atraso. Acima de 75 dias, a Lambda mensal provavelmente falhou.",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT DATEDIFF(CURDATE(), ultimo_dia) FROM arandu_analise.cobertura_fontes WHERE fonte = 'clima'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "suffix: dias",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#10b981",
+                "value": null
+              },
+              {
+                "color": "#d97706",
+                "value": 45
+              },
+              {
+                "color": "#e11d48",
+                "value": 75
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Última carga da análise",
+      "id": 3,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Quando o carga_analise.py rodou pela última vez.",
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT UNIX_TIMESTAMP(MAX(carregado_em)) * 1000 FROM arandu_analise.arquivos_pipeline"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeFromNow",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Volume da bronze",
+      "id": 4,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT SUM(bytes) FROM arandu_analise.arquivos_pipeline WHERE camada = 'bronze'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Dias na gold",
+      "id": 5,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) FROM arandu_analise.fatores_dia"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "Cobertura por fonte",
+      "id": 6,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Cobertura = dias com dado ÷ dias do recorte. Nas chamadas (lidas ao vivo do sistema), ÷ semanas entre a primeira e a última. Atraso = dias desde o último dado.",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 14,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT fonte AS Fonte, DATE_FORMAT(primeiro_dia, '%d/%m/%Y') AS `Primeiro dia`, DATE_FORMAT(ultimo_dia, '%d/%m/%Y') AS `Último dia`,\n  dias_com_dado AS `Dias com dado`, cobertura_pct AS Cobertura, GREATEST(0, DATEDIFF(CURDATE(), ultimo_dia)) AS `Atraso (dias)`\nFROM arandu_analise.cobertura_fontes WHERE fonte <> 'chamadas'\nUNION ALL\nSELECT 'chamadas', DATE_FORMAT(MIN(data_chamada), '%d/%m/%Y'), DATE_FORMAT(MAX(data_chamada), '%d/%m/%Y'), COUNT(DISTINCT data_chamada),\n  LEAST(100, ROUND(100 * COUNT(DISTINCT data_chamada) / (DATEDIFF(MAX(data_chamada), MIN(data_chamada)) / 7 + 1), 1)),\n  DATEDIFF(CURDATE(), MAX(data_chamada))\nFROM chamada"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cobertura"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#b33a4a"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Fonte"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "type": "barchart",
+      "title": "Tamanho por camada",
+      "id": 7,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Bronze guarda o arquivo como a fonte publicou; silver e gold ficam no Git.",
+      "gridPos": {
+        "x": 14,
+        "y": 5,
+        "w": 10,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT camada AS Camada, SUM(bytes) AS Tamanho FROM arandu_analise.arquivos_pipeline\nGROUP BY camada ORDER BY FIELD(camada, 'bronze', 'silver', 'gold')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Completude do clima por mês",
+      "id": 8,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "Falha de sensor (-9999) e defasagem de publicação aparecem como queda aqui.",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 14,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT STR_TO_DATE(DATE_FORMAT(dia, '%Y-%m-01'), '%Y-%m-%d') AS time,\n  100 * AVG(chuva_mm IS NOT NULL) AS `Dias com chuva medida`,\n  100 * AVG(temp_media_c IS NOT NULL) AS `Dias com temperatura`\nFROM arandu_analise.fatores_dia WHERE $__timeFilter(dia)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "always",
+            "pointSize": 5
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Dias com chuva medida"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3b82f6"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Dias com temperatura"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d97706"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "Arquivos do pipeline",
+      "id": 9,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 14,
+        "y": 13,
+        "w": 10,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT camada AS Camada, arquivo AS Arquivo, bytes AS Tamanho, linhas AS Linhas,\n  modificado_em AS `Modificado em`\nFROM arandu_analise.arquivos_pipeline ORDER BY FIELD(camada, 'bronze', 'silver', 'gold'), arquivo"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tamanho"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Banco do sistema",
+      "id": 10,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "barchart",
+      "title": "Registros por tabela",
+      "id": 11,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 10,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT * FROM (\n  SELECT 'Pessoa' AS Tabela, COUNT(*) AS Registros FROM Pessoa\n  UNION ALL SELECT 'Presença', COUNT(*) FROM presenca\n  UNION ALL SELECT 'Chamada', COUNT(*) FROM chamada\n  UNION ALL SELECT 'Evento', COUNT(*) FROM evento\n  UNION ALL SELECT 'Documento', COUNT(*) FROM Documento\n  UNION ALL SELECT 'Especialidade concluída', COUNT(*) FROM Especialidade_concluida\n  UNION ALL SELECT 'Ficha médica', COUNT(*) FROM Ficha_medica\n  UNION ALL SELECT 'Medicação', COUNT(*) FROM Medicacao\n  UNION ALL SELECT 'Ocorrência', COUNT(*) FROM Ocorrencia\n  UNION ALL SELECT 'Usuário', COUNT(*) FROM Usuario\n) t ORDER BY Registros DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Armazenamento de documentos",
+      "id": 12,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 10,
+        "y": 22,
+        "w": 7,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT SUM(tamanho) FROM Documento"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Usuários com login ativo",
+      "id": 13,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 17,
+        "y": 22,
+        "w": 7,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) FROM Usuario WHERE ativo = 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Documentos enviados",
+      "id": 14,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 10,
+        "y": 26,
+        "w": 14,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT $__timeGroupAlias(dataUpload, 1d), COUNT(*) AS Documentos\nFROM Documento WHERE $__timeFilter(dataUpload)\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          },
+          "decimals": 0,
+          "min": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 70,
+            "lineWidth": 1
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Qualidade e conformidade",
+      "id": 15,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Cadastros incompletos (desbravadores ativos)",
+      "id": 16,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT 'Sem unidade' AS Problema, COUNT(*) AS Quantidade FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1 AND p.Unidade_idUnidade IS NULL\nUNION ALL SELECT 'Sem classe', COUNT(*) FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1 AND p.Classe_idClasse IS NULL\nUNION ALL SELECT 'Sem gênero', COUNT(*) FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1 AND p.Genero_idGenero IS NULL\nUNION ALL SELECT 'Sem data de nascimento', COUNT(*) FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1 AND (p.data_nascimento IS NULL OR p.data_nascimento = '')\nUNION ALL SELECT 'Sem responsável', COUNT(*) FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1 AND (p.nome_responsavel1 IS NULL OR p.nome_responsavel1 = '')\nUNION ALL SELECT 'Sem consentimento LGPD', COUNT(*) FROM Pessoa p\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1 AND p.consentimento_em IS NULL"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Quantidade"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#10b981",
+                      "value": null
+                    },
+                    {
+                      "color": "#d97706",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "type": "table",
+      "title": "Integridade dos dados",
+      "id": 17,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 33,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT 'Chamadas sem nenhuma presença registrada' AS Verificação, COUNT(*) AS Ocorrências\nFROM chamada c WHERE NOT EXISTS (SELECT 1 FROM presenca pr WHERE pr.Chamada_idChamada = c.idChamada)\nUNION ALL SELECT 'Mais de uma chamada no mesmo dia', COUNT(*) FROM (\n  SELECT data_chamada FROM chamada GROUP BY data_chamada HAVING COUNT(*) > 1) t\nUNION ALL SELECT 'Eventos repetidos (mesmo nome, tipo e data)', COALESCE(SUM(n - 1), 0) FROM (\n  SELECT COUNT(*) AS n FROM evento GROUP BY nome, tipo, data_inicio HAVING COUNT(*) > 1) t\nUNION ALL SELECT 'Presenças de pessoas desativadas', COUNT(*)\nFROM presenca pr JOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa WHERE p.ativo = 0\nUNION ALL SELECT 'Documentos sem pessoa', COUNT(*) FROM Documento WHERE Pessoa_idPessoa IS NULL"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ocorrências"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#10b981",
+                      "value": null
+                    },
+                    {
+                      "color": "#e11d48",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Painéis do Arandu",
+      "type": "dashboards",
+      "tags": [
+        "arandu"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}

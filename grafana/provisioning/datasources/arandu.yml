@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: Arandu MySQL
+    uid: arandu-mysql
+    type: mysql
+    url: 127.0.0.1:3306
+    user: grafana_leitura
+    isDefault: true
+    jsonData:
+      database: clube_tamoios
+      timezone: "-03:00"
+      maxOpenConns: 10
+    secureJsonData:
+      password: ${ARANDU_DB_PASSWORD}
+    editable: false

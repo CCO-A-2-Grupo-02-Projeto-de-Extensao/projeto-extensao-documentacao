@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: Arandu
+    folder: Arandu Digital
+    type: file
+    disableDeletion: true
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

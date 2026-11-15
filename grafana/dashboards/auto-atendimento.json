@@ -1,0 +1,465 @@
+{
+  "uid": "arandu-autoatendimento",
+  "title": "Arandu — Auto atendimento",
+  "description": "Visualização e medidas sob demanda: o próprio usuário escolhe recorte, medida e quebra.",
+  "tags": [
+    "arandu"
+  ],
+  "timezone": "America/Sao_Paulo",
+  "editable": true,
+  "schemaVersion": 41,
+  "time": {
+    "from": "2026-01-01T00:00:00.000Z",
+    "to": "now"
+  },
+  "refresh": "",
+  "templating": {
+    "list": [
+      {
+        "name": "unidade",
+        "label": "Unidade",
+        "type": "query",
+        "datasource": {
+          "type": "mysql",
+          "uid": "arandu-mysql"
+        },
+        "query": "SELECT idUnidade AS __value, nome AS __text FROM Unidade ORDER BY nome",
+        "definition": "SELECT idUnidade AS __value, nome AS __text FROM Unidade ORDER BY nome",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": "-1",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 0
+      },
+      {
+        "name": "classe",
+        "label": "Classe",
+        "type": "query",
+        "datasource": {
+          "type": "mysql",
+          "uid": "arandu-mysql"
+        },
+        "query": "SELECT idClasse AS __value, nome AS __text FROM Classe ORDER BY idClasse",
+        "definition": "SELECT idClasse AS __value, nome AS __text FROM Classe ORDER BY idClasse",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": "-1",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 0
+      },
+      {
+        "name": "genero",
+        "label": "Gênero",
+        "type": "query",
+        "datasource": {
+          "type": "mysql",
+          "uid": "arandu-mysql"
+        },
+        "query": "SELECT idGenero AS __value, nome AS __text FROM Genero ORDER BY nome",
+        "definition": "SELECT idGenero AS __value, nome AS __text FROM Genero ORDER BY nome",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": "-1",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 0
+      },
+      {
+        "name": "desbravador",
+        "label": "Desbravador",
+        "type": "query",
+        "datasource": {
+          "type": "mysql",
+          "uid": "arandu-mysql"
+        },
+        "query": "SELECT p.idPessoa AS __value, p.nome AS __text\nFROM Pessoa p JOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1\n  AND (-1 IN ($unidade) OR p.Unidade_idUnidade IN ($unidade))\n  AND (-1 IN ($classe) OR p.Classe_idClasse IN ($classe))\nORDER BY p.nome",
+        "definition": "SELECT p.idPessoa AS __value, p.nome AS __text\nFROM Pessoa p JOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nWHERE p.ativo = 1\n  AND (-1 IN ($unidade) OR p.Unidade_idUnidade IN ($unidade))\n  AND (-1 IN ($classe) OR p.Classe_idClasse IN ($classe))\nORDER BY p.nome",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": "-1",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 0
+      },
+      {
+        "name": "medida",
+        "label": "Medida",
+        "type": "custom",
+        "query": "Frequência (%) : 100*AVG(pr.presenca), Presenças : SUM(pr.presenca), Faltas : SUM(1-pr.presenca), Registros de chamada : COUNT(*), Desbravadores distintos : COUNT(DISTINCT p.idPessoa)",
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "text": "Frequência (%)",
+          "value": "100*AVG(pr.presenca)"
+        },
+        "options": [
+          {
+            "text": "Frequência (%)",
+            "value": "100*AVG(pr.presenca)",
+            "selected": true
+          },
+          {
+            "text": "Presenças",
+            "value": "SUM(pr.presenca)",
+            "selected": false
+          },
+          {
+            "text": "Faltas",
+            "value": "SUM(1-pr.presenca)",
+            "selected": false
+          },
+          {
+            "text": "Registros de chamada",
+            "value": "COUNT(*)",
+            "selected": false
+          },
+          {
+            "text": "Desbravadores distintos",
+            "value": "COUNT(DISTINCT p.idPessoa)",
+            "selected": false
+          }
+        ]
+      },
+      {
+        "name": "dimensao",
+        "label": "Quebrar por",
+        "type": "custom",
+        "query": "Unidade : CASE WHEN u.nome IS NULL THEN 'Sem unidade' ELSE u.nome END, Classe : CASE WHEN cl.nome IS NULL THEN 'Sem classe' ELSE cl.nome END, Gênero : CASE WHEN g.nome IS NULL THEN 'Não informado' ELSE g.nome END, Desbravador : p.nome, Mês : EXTRACT(YEAR_MONTH FROM c.data_chamada)",
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "text": "Unidade",
+          "value": "CASE WHEN u.nome IS NULL THEN 'Sem unidade' ELSE u.nome END"
+        },
+        "options": [
+          {
+            "text": "Unidade",
+            "value": "CASE WHEN u.nome IS NULL THEN 'Sem unidade' ELSE u.nome END",
+            "selected": true
+          },
+          {
+            "text": "Classe",
+            "value": "CASE WHEN cl.nome IS NULL THEN 'Sem classe' ELSE cl.nome END",
+            "selected": false
+          },
+          {
+            "text": "Gênero",
+            "value": "CASE WHEN g.nome IS NULL THEN 'Não informado' ELSE g.nome END",
+            "selected": false
+          },
+          {
+            "text": "Desbravador",
+            "value": "p.nome",
+            "selected": false
+          },
+          {
+            "text": "Mês",
+            "value": "EXTRACT(YEAR_MONTH FROM c.data_chamada)",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "text",
+      "title": "Como usar",
+      "id": 1,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Escolha nos filtros do topo **o recorte** (período, unidade, classe, gênero, desbravador),\n**a medida** e **por onde quebrar**. Todos os painéis abaixo se recalculam na hora.\nPara guardar uma visão, copie o link da página: os filtros vão junto."
+      }
+    },
+    {
+      "type": "stat",
+      "title": "${medida} no recorte",
+      "id": 2,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT ${medida:raw} AS valor\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)\n  AND (-1 IN ($unidade) OR p.Unidade_idUnidade IN ($unidade))\n  AND (-1 IN ($classe) OR p.Classe_idClasse IN ($classe))\n  AND (-1 IN ($genero) OR p.Genero_idGenero IN ($genero))\n  AND (-1 IN ($desbravador) OR p.idPessoa IN ($desbravador))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#b33a4a",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "${medida} por reunião",
+      "id": 3,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 6,
+        "y": 3,
+        "w": 18,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT c.data_chamada AS time, ${medida:raw} AS `${medida:text}`\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)\n  AND (-1 IN ($unidade) OR p.Unidade_idUnidade IN ($unidade))\n  AND (-1 IN ($classe) OR p.Classe_idClasse IN ($classe))\n  AND (-1 IN ($genero) OR p.Genero_idGenero IN ($genero))\n  AND (-1 IN ($desbravador) OR p.idPessoa IN ($desbravador))\nGROUP BY c.data_chamada ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "pointSize": 6,
+            "showPoints": "always",
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "type": "barchart",
+      "title": "${medida} por ${dimensao}",
+      "id": 4,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT ${dimensao:raw} AS `${dimensao:text}`, ${medida:raw} AS `${medida:text}`\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)\n  AND (-1 IN ($unidade) OR p.Unidade_idUnidade IN ($unidade))\n  AND (-1 IN ($classe) OR p.Classe_idClasse IN ($classe))\n  AND (-1 IN ($genero) OR p.Genero_idGenero IN ($genero))\n  AND (-1 IN ($desbravador) OR p.idPessoa IN ($desbravador))\nGROUP BY 1 ORDER BY 2 DESC LIMIT 30"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b33a4a"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": false
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.7
+      }
+    },
+    {
+      "type": "table",
+      "title": "Detalhe por ${dimensao}",
+      "id": 5,
+      "datasource": {
+        "type": "mysql",
+        "uid": "arandu-mysql"
+      },
+      "description": "",
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "arandu-mysql"
+          },
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT ${dimensao:raw} AS `${dimensao:text}`,\n  COUNT(DISTINCT p.idPessoa) AS Desbravadores, COUNT(*) AS Registros,\n  SUM(pr.presenca) AS Presenças, SUM(1 - pr.presenca) AS Faltas, 100 * AVG(pr.presenca) AS Frequência\nFROM presenca pr\nJOIN chamada c ON c.idChamada = pr.Chamada_idChamada\nJOIN Pessoa p ON p.idPessoa = pr.Pessoa_idPessoa\nJOIN Cargo cg ON cg.idCargo = p.fkCargo AND cg.Nome = 'Desbravador'\nLEFT JOIN Unidade u ON u.idUnidade = p.Unidade_idUnidade\nLEFT JOIN Classe cl ON cl.idClasse = p.Classe_idClasse\nLEFT JOIN Genero g ON g.idGenero = p.Genero_idGenero\nWHERE $__timeFilter(c.data_chamada)\n  AND (-1 IN ($unidade) OR p.Unidade_idUnidade IN ($unidade))\n  AND (-1 IN ($classe) OR p.Classe_idClasse IN ($classe))\n  AND (-1 IN ($genero) OR p.Genero_idGenero IN ($genero))\n  AND (-1 IN ($desbravador) OR p.idPessoa IN ($desbravador))\nGROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Frequência"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#e11d48",
+                      "value": null
+                    },
+                    {
+                      "color": "#d97706",
+                      "value": 70
+                    },
+                    {
+                      "color": "#10b981",
+                      "value": 85
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Painéis do Arandu",
+      "type": "dashboards",
+      "tags": [
+        "arandu"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true
+    }
+  ]
+}
