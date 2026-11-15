@@ -1,22 +1,31 @@
 services:
-  grafana:
-    image: grafana/grafana:13.2.4
-    container_name: arandu-grafana
+  dados:
+    build:
+      context: ..
+      dockerfile: grafana/Dockerfile.dados
+    container_name: arandu-grafana-dados
     network_mode: host
     environment:
-      GF_SERVER_HTTP_PORT: "3001"
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_USERS_DEFAULT_LANGUAGE: pt-BR
-      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/painel-clube.json
-      ARANDU_DB_PASSWORD: ${ARANDU_DB_PASSWORD:-grafana_leitura}
+      ARANDU_DB_ROOT_PASSWORD: ${ARANDU_DB_ROOT_PASSWORD:-7425}
+      ARANDU_DEMO: ${ARANDU_DEMO:-1}
       TZ: America/Sao_Paulo
     volumes:
-      - ./provisioning:/etc/grafana/provisioning:ro
-      - ./dashboards:/var/lib/grafana/dashboards:ro
-      - grafana_data:/var/lib/grafana
-    restart: unless-stopped
+      - ../dados-externos:/dados-externos:ro
+    restart: "no"
 
-volumes:
-  grafana_data:
+  grafana:
+    build:
+      context: .
+      dockerfile: Dockerfile.grafana
+    container_name: arandu-grafana
+    network_mode: host
+    depends_on:
+      dados:
+        condition: service_completed_successfully
+    environment:
+      GF_SERVER_HTTP_PORT: "3001"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      ARANDU_DB_HOST: 127.0.0.1:3306
+      ARANDU_DB_NAME: clube_tamoios
+      ARANDU_DB_PASSWORD: grafana_leitura
+    restart: unless-stopped

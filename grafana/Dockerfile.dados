@@ -1,0 +1,8 @@
+FROM python:3.12-slim
+RUN pip install --no-cache-dir "PyMySQL[rsa]==1.1.1" "boto3==1.35.36"
+WORKDIR /grafana
+COPY grafana/carga_analise.py grafana/preparar_banco.py ./
+COPY grafana/sql ./sql
+COPY dados-externos/gold /dados-externos/gold
+COPY dados-externos/silver /dados-externos/silver
+CMD ["python", "preparar_banco.py"]

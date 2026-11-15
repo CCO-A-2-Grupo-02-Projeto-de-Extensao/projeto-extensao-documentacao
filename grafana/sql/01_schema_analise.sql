@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS cobertura_fontes (
 
 CREATE TABLE IF NOT EXISTS arquivos_pipeline (
     camada VARCHAR(10) NOT NULL,
-    arquivo VARCHAR(120) NOT NULL,
+    arquivo VARCHAR(255) NOT NULL,
     bytes BIGINT NOT NULL,
     linhas INT,
     modificado_em DATETIME NOT NULL,
@@ -32,6 +32,10 @@ CREATE TABLE IF NOT EXISTS arquivos_pipeline (
     PRIMARY KEY (camada, arquivo)
 );
 
-CREATE USER IF NOT EXISTS 'grafana_leitura'@'localhost' IDENTIFIED BY 'grafana_leitura';
-GRANT SELECT ON clube_tamoios.* TO 'grafana_leitura'@'localhost';
-GRANT SELECT ON arandu_analise.* TO 'grafana_leitura'@'localhost';
+ALTER TABLE arquivos_pipeline MODIFY arquivo VARCHAR(255) NOT NULL;
+
+DROP USER IF EXISTS 'grafana_leitura'@'localhost';
+CREATE USER IF NOT EXISTS 'grafana_leitura'@'%' IDENTIFIED BY '{{senha_leitura}}';
+ALTER USER 'grafana_leitura'@'%' IDENTIFIED BY '{{senha_leitura}}';
+GRANT SELECT ON {{banco_sistema}}.* TO 'grafana_leitura'@'%';
+GRANT SELECT ON arandu_analise.* TO 'grafana_leitura'@'%';

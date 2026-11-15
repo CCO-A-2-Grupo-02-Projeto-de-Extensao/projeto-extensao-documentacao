@@ -4,11 +4,11 @@ datasources:
   - name: Arandu MySQL
     uid: arandu-mysql
     type: mysql
-    url: 127.0.0.1:3306
+    url: ${ARANDU_DB_HOST}
     user: grafana_leitura
     isDefault: true
     jsonData:
-      database: clube_tamoios
+      database: ${ARANDU_DB_NAME}
       timezone: "-03:00"
       maxOpenConns: 10
     secureJsonData:

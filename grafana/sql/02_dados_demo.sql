@@ -1,10 +1,10 @@
-USE clube_tamoios;
+USE {{banco_sistema}};
 
 INSERT INTO evento (nome, tipo, data_inicio, data_fim, descricao)
 WITH RECURSIVE sabados AS (
     SELECT DATE('2026-02-07') AS dia
     UNION ALL
-    SELECT dia + INTERVAL 7 DAY FROM sabados WHERE dia < '2026-10-10'
+    SELECT dia + INTERVAL 7 DAY FROM sabados WHERE dia + INTERVAL 7 DAY <= CURDATE()
 )
 SELECT 'Reunião', 'Reunião', s.dia, s.dia, '[demo-grafana]'
 FROM sabados s
@@ -14,7 +14,7 @@ INSERT INTO chamada (data_chamada, titulo, Evento_idEvento)
 SELECT e.data_inicio, CONCAT('[demo] Chamada - ', DATE_FORMAT(e.data_inicio, '%d/%m/%Y')), MIN(e.idEvento)
 FROM evento e
 WHERE e.tipo = 'Reunião'
-  AND e.data_inicio BETWEEN '2026-02-07' AND '2026-11-14'
+  AND e.data_inicio BETWEEN '2026-02-07' AND CURDATE()
   AND NOT EXISTS (SELECT 1 FROM chamada c WHERE c.data_chamada = e.data_inicio)
 GROUP BY e.data_inicio;
 
